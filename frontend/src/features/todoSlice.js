@@ -1,27 +1,43 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 
 const API = "http://localhost:5000/api/todos";
 
+const fetchJSON = async (url, options = {}) => {
+    const res = await fetch(url, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+    });
+    if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    return res.json();
+};
+
 export const fetchTodos = createAsyncThunk("todos/fetchTodos", async () => {
-    const res = await axios.get(API);
-    return res.data;
+    return await fetchJSON(API);
 });
 
 export const addTodo = createAsyncThunk("todos/addTodo", async (text) => {
-    const res = await axios.post(API, { text });
-    return res.data;
+    return await fetchJSON(API, {
+        method: "POST",
+        body: JSON.stringify({ text }),
+    });
 });
 
 export const toggleTodo = createAsyncThunk("todos/toggleTodo", async (todo) => {
-    const res = await axios.patch(`${API}/${todo._id}`, {
-        completed: !todo.completed,
+    return await fetchJSON(`${API}/${todo._id}`, {
+        method: "PUT",
+        body: JSON.stringify({ completed: !todo.completed }),
     });
-    return res.data;
 });
 
 export const deleteTodo = createAsyncThunk("todos/deleteTodo", async (id) => {
-    await axios.delete(`${API}/${id}`);
+    const res = await fetch(`${API}/${id}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+    }
     return id;
 });
 
